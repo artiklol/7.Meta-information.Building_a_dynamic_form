@@ -11,6 +11,7 @@ class MainTableFooter: UITableViewHeaderFooterView {
     static let identifier = "MainTableFooter"
 
     let sendButton = UIButton()
+    private lazy var dataToSend = [String: [String]]()
 
     override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
@@ -20,6 +21,7 @@ class MainTableFooter: UITableViewHeaderFooterView {
         sendButton.backgroundColor = .black
         sendButton.layer.cornerRadius = 10
         sendButton.setTitle("Отправить", for: .normal)
+        sendButton.isHidden = true
 
         sendButton.snp.makeConstraints { maker in
             maker.centerX.centerY.equalTo(contentView)
@@ -32,4 +34,5 @@ class MainTableFooter: UITableViewHeaderFooterView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
 }

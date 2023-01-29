@@ -24,11 +24,27 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
     private lazy var buffer = ""
     private lazy var refreshButton = UIBarButtonItem(title: "Обновить", style: .plain, target: self,
                                                      action: #selector(refreshButtonTapped))
+    var activit = Bool()
+    var buttonActiv = Bool()
+    var imag = UIImage()
+    private lazy var iconImageView: UIImageView = {
+        let imageView = UIImageView()
+        return imageView
+    }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        view.backgroundColor = .white
+        table.backgroundColor = .clear
+        view.addSubview(iconImageView)
+        iconImageView.isHidden = true
+        iconImageView.snp.makeConstraints { maker in
+            maker.centerX.centerY.equalToSuperview()
+            maker.width.equalTo(200)
+            maker.height.equalTo(18)
+        }
         setTableView()
+
         fetchData()
     }
 
@@ -60,12 +76,14 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
 
         group.enter()
         startActivityView()
-        NetworkManager.fetchFormConstructor { form in
+        NetworkManager.fetchFormConstructor { form, image in
             self.formConstructor = form
+            self.iconImageView.image = image
             group.leave()
         }
 
         group.notify(queue: .main) {
+            self.iconImageView.isHidden = false
             self.setNavigationBar()
             self.table.reloadData()
             self.stopActivityView()
@@ -91,7 +109,13 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
 
     func updateTitleButton(value: String, key: String) {
         titleButton = value
-        addElementInDataToSend(value: key, nameField: NameField.list.rawValue)
+        if key == "" {
+            activit = false
+            removeElementInDataToSend(nameField: NameField.list.rawValue)
+        } else {
+            activit = true
+            addElementInDataToSend(value: key, nameField: NameField.list.rawValue)
+        }
         let selectedIndexPath = IndexPath(row: tag, section: 0)
         table.reloadRows(at: [selectedIndexPath], with: .none)
      }
@@ -113,7 +137,8 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
 
         let list = ListViewController()
         list.delegate = self
-        list.fetchDictionary(dictionary: formConstructor?.fields[sender.tag].values ?? ["": ""])
+        list.fetchDictionary(dictionary: formConstructor?.fields[sender.tag].values ?? ["": ""],
+                             text: sender.currentTitle ?? "")
         tag = sender.tag
 
         let navigationController = UINavigationController(rootViewController: list)
@@ -160,17 +185,57 @@ extension MainViewController: UITableViewDataSource, UITableViewDelegate {
             cell.textField.delegate = self
             cell.button.setTitle(titleButton, for: .normal)
             cell.button.addTarget(self, action: #selector(showList(sender:)), for: .touchUpInside)
+            cell.selectionStyle = .none
+            if activit {
+                cell.button.layer.borderColor = UIColor(named: "Green")?.cgColor
+            } else {
+                cell.button.layer.borderColor = UIColor.lightGray.cgColor
+            }
         }
         return cell
     }
 
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        let footer = tableView.dequeueReusableHeaderFooterView(withIdentifier: MainTableFooter.identifier)
+        let footer = tableView.dequeueReusableHeaderFooterView(
+            withIdentifier: MainTableFooter.identifier) as? MainTableFooter
+        footer?.sendButton.addTarget(self, action: #selector(showsdList), for: .touchUpInside)
+        if formConstructor != nil {
+            footer?.sendButton.isHidden = false
+        }
         return footer
     }
 
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 100
+        return 80
+    }
+
+    @objc private func showsdList() {
+        startActivityView()
+        var test1: [String: String] = [:]
+        for (key, value) in dataToSend {
+            var stre = ""
+            for valo in value {
+                stre += "\(valo) "
+            }
+            test1[key] = stre
+        }
+
+        let test: [String: [String: String]] = ["form": test1]
+        NetworkManager.sendData(parametrs: test, completion: { tet in
+
+            var text = String()
+            for (_, value) in tet {
+                text = value
+            }
+            let alert = UIAlertController(title: "Ответ с сервера",
+                                          message: text,
+                                          preferredStyle: .alert)
+
+            alert.addAction(UIAlertAction(title: "Закрыть", style: .cancel, handler: nil))
+
+            self.stopActivityView()
+            self.present(alert, animated: true, completion: nil)
+        })
     }
 
 }
@@ -183,8 +248,10 @@ extension MainViewController: UITextFieldDelegate {
             if cell.typeField == TypeField.text {
                 if string.searchForMatches(regex: cell.textRegex) {
                     textField.layer.borderColor = UIColor(named: "Green")?.cgColor
+                    buttonActiv = true
                 } else {
                     textField.layer.borderColor = UIColor.red.cgColor
+                    buttonActiv = false
                 }
             }
         }
@@ -206,7 +273,12 @@ extension MainViewController: UITextFieldDelegate {
                     addElementInDataToSend(value: text, nameField: NameField.numeric.rawValue)
                 } else {
                     textField.layer.borderColor = UIColor.red.cgColor
+                    buttonActiv = false
                     removeElementInDataToSend(nameField: NameField.numeric.rawValue)
+                }
+
+                if text.isEmpty {
+                    textField.layer.borderColor = UIColor.black.cgColor
                 }
             } else if cell.typeField == TypeField.text {
                 if text.isEmpty {

@@ -13,6 +13,10 @@ class ListViewController: UIViewController {
     var values = [String: String]()
     var keysArray = [String]()
     var delegate: MainViewControllerDelegate?
+    private lazy var resetButton = UIBarButtonItem(title: "Сбросить", style: .plain, target: self,
+                                                     action: #selector(resetButtonTapped))
+    var text = String()
+    var index = IndexPath()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,6 +28,7 @@ class ListViewController: UIViewController {
         navigationBar?.standardAppearance = navBarAppearance
         navigationBar?.scrollEdgeAppearance = navBarAppearance
         navigationItem.title = "Выберите значение"
+        navigationItem.rightBarButtonItem = resetButton
 
         table.register(ListTableViewCell.self, forCellReuseIdentifier: ListTableViewCell.cellIdentifier)
         table.dataSource = self
@@ -55,9 +60,16 @@ class ListViewController: UIViewController {
         }
     }
 
-    func fetchDictionary(dictionary: [String: String]) {
+    func fetchDictionary(dictionary: [String: String], text: String) {
         values = dictionary
+        self.text = text
         table.reloadData()
+    }
+
+    @objc func resetButtonTapped() {
+        var titleButton = "Выбрать значение..."
+        delegate?.updateTitleButton(value: titleButton, key: "")
+        table.deselectRow(at: index, animated: false)
     }
 }
 
@@ -74,6 +86,10 @@ extension ListViewController: UITableViewDataSource {
 
         let currentKey = keysArray[indexPath.row]
         cell.label.text = values[currentKey]
+        if values[currentKey] == text {
+            tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
+            index = indexPath
+        }
 
         return cell
     }
@@ -84,6 +100,7 @@ extension ListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let currentKey = keysArray[indexPath.row]
         delegate?.updateTitleButton(value: values[currentKey] ?? "", key: keysArray[indexPath.row])
+        tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
         dismiss(animated: true)
     }
 }

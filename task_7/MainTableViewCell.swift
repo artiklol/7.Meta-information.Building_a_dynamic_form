@@ -31,8 +31,9 @@ class MainTableViewCell: UITableViewCell {
         button.titleLabel?.font = .systemFont(ofSize: 14)
         button.layer.cornerRadius = 5
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.gray.cgColor
-        button.backgroundColor = .gray
+        button.layer.borderColor = UIColor.lightGray.cgColor
+        button.backgroundColor = .lightGray
+        button.setTitleColor(.black, for: .normal)
         return button
     }()
 

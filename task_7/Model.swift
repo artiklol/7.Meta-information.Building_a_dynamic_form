@@ -42,8 +42,7 @@ class Field: Codable {
  }
 
 enum NameField: String, Codable {
-   case text = "text"
-   case numeric = "numeric"
-   case list = "list"
+   case text
+   case numeric
+   case list
 }
-
