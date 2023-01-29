@@ -7,7 +7,6 @@
 
 import Foundation
 
-// MARK: - Form
 class Form: Codable {
     let title: String
     let image: String
@@ -20,7 +19,6 @@ class Form: Codable {
     }
 }
 
-// MARK: - Field
 class Field: Codable {
     let title: String
     let name: NameField

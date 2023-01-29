@@ -73,20 +73,60 @@
 		06BEB25A29802459007E09F4 /* task_7 */ = {
 			isa = PBXGroup;
 			children = (
+				06BEB280298702DC007E09F4 /* Model */,
+				06BEB27F298702CF007E09F4 /* View */,
+				06BEB27E298702BC007E09F4 /* Controller */,
+				06BEB27D298702AB007E09F4 /* Services */,
+				06BEB27C2987023E007E09F4 /* Support Files */,
+			);
+			path = task_7;
+			sourceTree = "<group>";
+		};
+		06BEB27C2987023E007E09F4 /* Support Files */ = {
+			isa = PBXGroup;
+			children = (
 				06BEB25B29802459007E09F4 /* AppDelegate.swift */,
 				06BEB25D29802459007E09F4 /* SceneDelegate.swift */,
-				06BEB25F29802459007E09F4 /* MainViewController.swift */,
-				06BEB2722980437D007E09F4 /* MainTableViewCell.swift */,
-				06BEB27A2985999B007E09F4 /* MainTableFooter.swift */,
-				06BEB2762983157B007E09F4 /* ListViewController.swift */,
-				06BEB2782983216D007E09F4 /* ListTableViewCell.swift */,
-				06BEB27029804289007E09F4 /* Model.swift */,
-				06BEB274298045E1007E09F4 /* NetworkManager.swift */,
 				06BEB2642980245C007E09F4 /* Assets.xcassets */,
 				06BEB2662980245C007E09F4 /* LaunchScreen.storyboard */,
 				06BEB2692980245C007E09F4 /* Info.plist */,
 			);
-			path = task_7;
+			path = "Support Files";
+			sourceTree = "<group>";
+		};
+		06BEB27D298702AB007E09F4 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				06BEB274298045E1007E09F4 /* NetworkManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		06BEB27E298702BC007E09F4 /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				06BEB25F29802459007E09F4 /* MainViewController.swift */,
+				06BEB2762983157B007E09F4 /* ListViewController.swift */,
+			);
+			path = Controller;
+			sourceTree = "<group>";
+		};
+		06BEB27F298702CF007E09F4 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				06BEB2722980437D007E09F4 /* MainTableViewCell.swift */,
+				06BEB27A2985999B007E09F4 /* MainTableFooter.swift */,
+				06BEB2782983216D007E09F4 /* ListTableViewCell.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		06BEB280298702DC007E09F4 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				06BEB27029804289007E09F4 /* Model.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 		71BB836A6A2F390EED2B8EC4 /* Frameworks */ = {
@@ -390,7 +430,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = T5K8V44L2C;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = task_7/Info.plist;
+				INFOPLIST_FILE = "task_7/Support Files/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -418,7 +458,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = T5K8V44L2C;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = task_7/Info.plist;
+				INFOPLIST_FILE = "task_7/Support Files/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

@@ -9,38 +9,28 @@ import UIKit
 
 class ListViewController: UIViewController {
 
-    let table = UITableView()
-    var values = [String: String]()
-    var keysArray = [String]()
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.separatorInset = .zero
+        return tableView
+    }()
+
+    private lazy var values = [String: String]()
+    private lazy var keysArray = [String]()
+    private lazy var text = String()
+    private lazy var index = IndexPath()
+
     var delegate: MainViewControllerDelegate?
-    private lazy var resetButton = UIBarButtonItem(title: "Сбросить", style: .plain, target: self,
-                                                     action: #selector(resetButtonTapped))
-    var text = String()
-    var index = IndexPath()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
 
-        let navigationBar = navigationController?.navigationBar
-        navigationBar?.overrideUserInterfaceStyle = .unspecified
-        let navBarAppearance = UINavigationBarAppearance()
-        navigationBar?.standardAppearance = navBarAppearance
-        navigationBar?.scrollEdgeAppearance = navBarAppearance
-        navigationItem.title = "Выберите значение"
-        navigationItem.rightBarButtonItem = resetButton
-
-        table.register(ListTableViewCell.self, forCellReuseIdentifier: ListTableViewCell.cellIdentifier)
-        table.dataSource = self
-        table.delegate = self
-        view.addSubview(table)
-
-        table.snp.makeConstraints { maker in
-            maker.top.left.right.bottom.equalToSuperview()
-        }
+        setNavigationBar()
+        setTableView()
+        addSubviewElement()
+        setConstraint()
 
         keysArray = Array(values.keys)
-
     }
 
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -60,16 +50,44 @@ class ListViewController: UIViewController {
         }
     }
 
+    private func setNavigationBar() {
+        let navigationBar = navigationController?.navigationBar
+        navigationBar?.overrideUserInterfaceStyle = .unspecified
+        let navBarAppearance = UINavigationBarAppearance()
+        navigationBar?.standardAppearance = navBarAppearance
+        navigationBar?.scrollEdgeAppearance = navBarAppearance
+        navigationItem.title = "Выберите значение"
+        let resetButton = UIBarButtonItem(title: "Сбросить", style: .plain, target: self,
+                                                         action: #selector(resetButtonTapped))
+        navigationItem.rightBarButtonItem = resetButton
+    }
+
+    private func setTableView() {
+        tableView.register(ListTableViewCell.self, forCellReuseIdentifier: ListTableViewCell.cellIdentifier)
+        tableView.dataSource = self
+        tableView.delegate = self
+    }
+
+    private func addSubviewElement() {
+        view.addSubview(tableView)
+    }
+
+    private func setConstraint() {
+        tableView.snp.makeConstraints { maker in
+            maker.top.left.right.bottom.equalToSuperview()
+        }
+    }
+
     func fetchDictionary(dictionary: [String: String], text: String) {
         values = dictionary
         self.text = text
-        table.reloadData()
+        tableView.reloadData()
     }
 
     @objc func resetButtonTapped() {
-        var titleButton = "Выбрать значение..."
-        delegate?.updateTitleButton(value: titleButton, key: "")
-        table.deselectRow(at: index, animated: false)
+        let defaultTitleButton = "Выбрать значение..."
+        delegate?.updateTitleButton(value: defaultTitleButton, key: "")
+        tableView.deselectRow(at: index, animated: false)
     }
 }
 
@@ -85,7 +103,7 @@ extension ListViewController: UITableViewDataSource {
         }
 
         let currentKey = keysArray[indexPath.row]
-        cell.label.text = values[currentKey]
+        cell.settingLabel().text = values[currentKey]
         if values[currentKey] == text {
             tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
             index = indexPath

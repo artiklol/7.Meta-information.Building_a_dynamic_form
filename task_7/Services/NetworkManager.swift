@@ -11,7 +11,6 @@ class NetworkManager {
 
     static private let url = "http://test.clevertec.ru/tt/meta/"
     static private let postUrl = "http://test.clevertec.ru/tt/data/"
-    //    static private let test = "https://mocki.io/v1/489e8788-1a8a-4206-aa93-78698ffe6d86"
 
     static func fetchFormConstructor(completion: @escaping (Form, UIImage) -> Void) {
         guard let url = URL(string: url) else { return }
@@ -68,4 +67,3 @@ class NetworkManager {
         }.resume()
     }
 }
-

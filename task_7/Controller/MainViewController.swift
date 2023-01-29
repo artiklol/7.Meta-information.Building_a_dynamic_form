@@ -14,37 +14,39 @@ protocol MainViewControllerDelegate: AnyObject {
 
 class MainViewController: UIViewController, MainViewControllerDelegate {
 
-    private lazy var table = UITableView()
-    private var formConstructor: Form?
-    private lazy var overlayActivityView = UIView()
-    private lazy var activityIndicatorView = UIActivityIndicatorView()
-    private lazy var titleButton = "Выбрать значение..."
-    private lazy var dataToSend = [String: [String]]()
-    private lazy var tag = 0
-    private lazy var buffer = ""
-    private lazy var refreshButton = UIBarButtonItem(title: "Обновить", style: .plain, target: self,
-                                                     action: #selector(refreshButtonTapped))
-    var activit = Bool()
-    var buttonActiv = Bool()
-    var imag = UIImage()
-    private lazy var iconImageView: UIImageView = {
+    private lazy var tableView: UITableView = {
+        let tableView = UITableView()
+        tableView.backgroundColor = .clear
+        tableView.separatorInset = .zero
+        return tableView
+    }()
+
+    private lazy var backgroundImageView: UIImageView = {
         let imageView = UIImageView()
+        imageView.isHidden = true
         return imageView
     }()
 
+    private lazy var overlayActivityView = UIView()
+    private lazy var activityIndicatorView = UIActivityIndicatorView()
+
+    private lazy var titleButton = "Выбрать значение..."
+    private lazy var tagButton = 0
+    private lazy var buffer = ""
+
+    private lazy var numericRegex = "^(([1-9][0-9]{0,2}|10[0-1][0-9]|102[0-3])([.,][0-9])?|1024([.,][0])?)$"
+    private lazy var textRegex = "^([а-яё]*|[А-ЯЁ]*|[a-z]*|[A-Z]*|[0-9]*)$"
+
+    private lazy var dataToSend = [String: [String]]()
+    private var formConstructor: Form?
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
-        table.backgroundColor = .clear
-        view.addSubview(iconImageView)
-        iconImageView.isHidden = true
-        iconImageView.snp.makeConstraints { maker in
-            maker.centerX.centerY.equalToSuperview()
-            maker.width.equalTo(200)
-            maker.height.equalTo(18)
-        }
-        setTableView()
+        view.backgroundColor = UIColor(named: "ViewBackgroundColor")
 
+        setTableView()
+        addSubviewElement()
+        setConstraint()
         fetchData()
     }
 
@@ -55,18 +57,27 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
         navigationBar?.standardAppearance = navBarAppearance
         navigationBar?.scrollEdgeAppearance = navBarAppearance
         navigationItem.title = formConstructor?.title
-        navigationItem.rightBarButtonItem = refreshButton
     }
 
     private func setTableView() {
-        table.dataSource = self
-        table.delegate = self
-        table.register(MainTableViewCell.self, forCellReuseIdentifier: MainTableViewCell.cellIdentifier)
-        table.register(MainTableFooter.self, forHeaderFooterViewReuseIdentifier: MainTableFooter.identifier)
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(MainTableViewCell.self, forCellReuseIdentifier: MainTableViewCell.cellIdentifier)
+        tableView.register(MainTableFooter.self, forHeaderFooterViewReuseIdentifier: MainTableFooter.identifier)
+    }
 
-        view.addSubview(table)
+    private func addSubviewElement() {
+        view.addSubview(backgroundImageView)
+        view.addSubview(tableView)
+    }
 
-        table.snp.makeConstraints { maker in
+    private func setConstraint() {
+        backgroundImageView.snp.makeConstraints { maker in
+            maker.centerX.centerY.equalToSuperview()
+            maker.width.equalTo(200)
+            maker.height.equalTo(18)
+        }
+        tableView.snp.makeConstraints { maker in
             maker.top.left.right.bottom.equalToSuperview()
         }
     }
@@ -76,16 +87,16 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
 
         group.enter()
         startActivityView()
-        NetworkManager.fetchFormConstructor { form, image in
-            self.formConstructor = form
-            self.iconImageView.image = image
+        NetworkManager.fetchFormConstructor { [weak self] form, image in
+            self?.formConstructor = form
+            self?.backgroundImageView.image = image
             group.leave()
         }
 
         group.notify(queue: .main) {
-            self.iconImageView.isHidden = false
+            self.backgroundImageView.isHidden = false
             self.setNavigationBar()
-            self.table.reloadData()
+            self.tableView.reloadData()
             self.stopActivityView()
         }
     }
@@ -110,19 +121,12 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
     func updateTitleButton(value: String, key: String) {
         titleButton = value
         if key == "" {
-            activit = false
             removeElementInDataToSend(nameField: NameField.list.rawValue)
         } else {
-            activit = true
             addElementInDataToSend(value: key, nameField: NameField.list.rawValue)
         }
-        let selectedIndexPath = IndexPath(row: tag, section: 0)
-        table.reloadRows(at: [selectedIndexPath], with: .none)
-     }
-
-    @objc func refreshButtonTapped() {
-        print(dataToSend)
-        print(dataToSend.count)
+        let selectedIndexPath = IndexPath(row: tagButton, section: 0)
+        tableView.reloadRows(at: [selectedIndexPath], with: .none)
     }
 
     @objc func showList(sender: UIButton) {
@@ -139,7 +143,7 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
         list.delegate = self
         list.fetchDictionary(dictionary: formConstructor?.fields[sender.tag].values ?? ["": ""],
                              text: sender.currentTitle ?? "")
-        tag = sender.tag
+        tagButton = sender.tag
 
         let navigationController = UINavigationController(rootViewController: list)
         navigationController.modalPresentationStyle = .pageSheet
@@ -157,16 +161,11 @@ class MainViewController: UIViewController, MainViewControllerDelegate {
                 sheet.prefersEdgeAttachedInCompactHeight = false
             }
         }
-
         present(navigationController, animated: true, completion: nil)
     }
 }
 
-extension MainViewController: UITableViewDataSource, UITableViewDelegate {
-    func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-
+extension MainViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard let formConstructor = formConstructor else { return 0 }
         return formConstructor.fields.count
@@ -177,30 +176,32 @@ extension MainViewController: UITableViewDataSource, UITableViewDelegate {
                                                        for: indexPath) as? MainTableViewCell else {
             return MainTableViewCell()
         }
+        let defaultTitleButton = "Выбрать значение..."
 
         if let formConstructor = formConstructor?.fields[indexPath.row] {
-            cell.dataInCell(field: formConstructor)
-            cell.button.tag = indexPath.row
-            cell.textField.tag = indexPath.row
-            cell.textField.delegate = self
-            cell.button.setTitle(titleButton, for: .normal)
-            cell.button.addTarget(self, action: #selector(showList(sender:)), for: .touchUpInside)
-            cell.selectionStyle = .none
-            if activit {
-                cell.button.layer.borderColor = UIColor(named: "Green")?.cgColor
+            cell.dataInCell(field: formConstructor, indexPath: indexPath.row)
+            cell.settingTextField().delegate = self
+            cell.settingButton().setTitle(titleButton, for: .normal)
+            if cell.settingButton().currentTitle != defaultTitleButton {
+                cell.settingButton().layer.borderColor = UIColor(named: "Green")?.cgColor
             } else {
-                cell.button.layer.borderColor = UIColor.lightGray.cgColor
+                cell.settingButton().layer.borderColor = UIColor(named: "ButtonShowList")?.cgColor
             }
+            cell.settingButton().addTarget(self, action: #selector(showList(sender:)), for: .touchUpInside)
+            cell.selectionStyle = .none
         }
         return cell
     }
+}
 
+extension MainViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         let footer = tableView.dequeueReusableHeaderFooterView(
             withIdentifier: MainTableFooter.identifier) as? MainTableFooter
-        footer?.sendButton.addTarget(self, action: #selector(showsdList), for: .touchUpInside)
+
+        footer?.settingSendButton().addTarget(self, action: #selector(sendButtonTap), for: .touchUpInside)
         if formConstructor != nil {
-            footer?.sendButton.isHidden = false
+            footer?.settingSendButton().isHidden = false
         }
         return footer
     }
@@ -209,49 +210,46 @@ extension MainViewController: UITableViewDataSource, UITableViewDelegate {
         return 80
     }
 
-    @objc private func showsdList() {
+    @objc func sendButtonTap() {
         startActivityView()
-        var test1: [String: String] = [:]
+        var convertDataToSend: [String: String] = [:]
         for (key, value) in dataToSend {
-            var stre = ""
-            for valo in value {
-                stre += "\(valo) "
+            var convertValueToString = ""
+            for element in value {
+                convertValueToString += "\(element) "
             }
-            test1[key] = stre
+            convertDataToSend[key] = convertValueToString
         }
 
-        let test: [String: [String: String]] = ["form": test1]
-        NetworkManager.sendData(parametrs: test, completion: { tet in
-
-            var text = String()
-            for (_, value) in tet {
-                text = value
+        let resultConvertDataToSend: [String: [String: String]] = ["form": convertDataToSend]
+        NetworkManager.sendData(parametrs: resultConvertDataToSend, completion: { [weak self] responseFromServer in
+            var responseFromServerString = String()
+            for (_, value) in responseFromServer {
+                responseFromServerString = value
             }
-            let alert = UIAlertController(title: "Ответ с сервера",
-                                          message: text,
+
+            let alert = UIAlertController(title: "Ответ с сервера", message: responseFromServerString,
                                           preferredStyle: .alert)
 
             alert.addAction(UIAlertAction(title: "Закрыть", style: .cancel, handler: nil))
 
-            self.stopActivityView()
-            self.present(alert, animated: true, completion: nil)
+            self?.stopActivityView()
+            self?.present(alert, animated: true, completion: nil)
         })
-    }
 
+    }
 }
 
 extension MainViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange,
                    replacementString string: String) -> Bool {
         let index = NSIndexPath(row: textField.tag, section: 0)
-        if let cell = table.cellForRow(at: index as IndexPath)as? MainTableViewCell {
-            if cell.typeField == TypeField.text {
-                if string.searchForMatches(regex: cell.textRegex) {
+        if let cell = tableView.cellForRow(at: index as IndexPath)as? MainTableViewCell {
+            if cell.infoTypeField() == TypeField.text {
+                if string.searchForMatches(regex: textRegex) {
                     textField.layer.borderColor = UIColor(named: "Green")?.cgColor
-                    buttonActiv = true
                 } else {
                     textField.layer.borderColor = UIColor.red.cgColor
-                    buttonActiv = false
                 }
             }
         }
@@ -264,23 +262,29 @@ extension MainViewController: UITextFieldDelegate {
 
     func textFieldDidEndEditing(_ textField: UITextField) {
         let index = NSIndexPath(row: textField.tag, section: 0)
-        if let cell = table.cellForRow(at: index as IndexPath)as? MainTableViewCell {
-            guard let text = cell.textField.text else { return }
-
-            if cell.typeField == TypeField.numeric {
-                if text.searchForMatches(regex: cell.numericRegex) {
+        if let cell = tableView.cellForRow(at: index as IndexPath)as? MainTableViewCell {
+            guard let text = textField.text else { return }
+            if cell.infoTypeField() == TypeField.numeric {
+                if text.searchForMatches(regex: numericRegex) {
                     textField.layer.borderColor = UIColor(named: "Green")?.cgColor
-                    addElementInDataToSend(value: text, nameField: NameField.numeric.rawValue)
+
+                    if text.firstIndex(of: ".") == nil {
+                        textField.text? += ".0"
+                    }
+
+                    if text.firstIndex(of: ",") != nil {
+                        textField.text = replacingCommaWithDot(text: text)
+                    }
+
+                    addElementInDataToSend(value: textField.text ?? "", nameField: NameField.numeric.rawValue)
                 } else {
                     textField.layer.borderColor = UIColor.red.cgColor
-                    buttonActiv = false
                     removeElementInDataToSend(nameField: NameField.numeric.rawValue)
                 }
-
                 if text.isEmpty {
                     textField.layer.borderColor = UIColor.black.cgColor
                 }
-            } else if cell.typeField == TypeField.text {
+            } else if cell.infoTypeField() == TypeField.text {
                 if text.isEmpty {
                     textField.layer.borderColor = UIColor.black.cgColor
                 }
@@ -292,6 +296,7 @@ extension MainViewController: UITextFieldDelegate {
                 }
             }
         }
+        print(dataToSend)
     }
 
     private func addElementInDataToSend(value: String, nameField: String) {
@@ -323,5 +328,23 @@ extension MainViewController: UITextFieldDelegate {
                 }
             }
         }
+    }
+
+    private func replacingCommaWithDot(text: String) -> String {
+        var result = String()
+        for char in text {
+            if char == "," {
+                result += "."
+            } else {
+                result += "\(char)"
+            }
+        }
+        return result
+    }
+}
+
+extension String {
+    func searchForMatches(regex: String) -> Bool {
+        return self.range(of: regex, options: .regularExpression, range: nil, locale: nil) != nil
     }
 }

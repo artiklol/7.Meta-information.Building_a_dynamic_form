@@ -11,13 +11,14 @@ class MainTableViewCell: UITableViewCell {
 
     static let cellIdentifier = "mainCell"
 
-    let label: UILabel = {
+    private lazy var  label: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
+        label.textColor = UIColor(named: "BlackWhite")
         return label
     }()
 
-    let textField: UITextField = {
+    private lazy var  textField: UITextField = {
         let textField = UITextField()
         textField.isUserInteractionEnabled = true
         textField.textAlignment = .center
@@ -26,25 +27,35 @@ class MainTableViewCell: UITableViewCell {
         return textField
     }()
 
-    let button: UIButton = {
+    private lazy var  button: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = .systemFont(ofSize: 14)
         button.layer.cornerRadius = 5
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.lightGray.cgColor
-        button.backgroundColor = .lightGray
-        button.setTitleColor(.black, for: .normal)
+        button.layer.borderColor = UIColor(named: "ButtonShowList")?.cgColor
+        button.backgroundColor = UIColor(named: "ButtonShowList")
+        button.setTitleColor(UIColor(named: "BlackWhite"), for: .normal)
         return button
     }()
 
-    let numericRegex = "^(([1-9][0-9]{0,2}|10[0-1][0-9]|102[0-3])([.][0-9]{1,2})?|1024([.][0]{1,2})?)$"
-    let textRegex = "^([а-яё]*|[А-ЯЁ]*|[a-z]*|[A-Z]*|[0-9]*)$"
+    private lazy var typeField = TypeField.text
 
-    var typeField = TypeField.text
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
 
-    func dataInCell(field: Field) {
+        contentView.backgroundColor = UIColor(named: "ViewBackgroundColor")
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func dataInCell(field: Field, indexPath: Int) {
         typeField = field.type
         label.text = field.title
+
+        button.tag = indexPath
+        textField.tag = indexPath
 
         if field.type == TypeField.text {
             setupKeyboard(textField: textField, keyboardType: .namePhonePad)
@@ -58,6 +69,18 @@ class MainTableViewCell: UITableViewCell {
             addSubviewElement(textField: nil, button: button)
             setConstraint(textField: nil, button: button)
         }
+    }
+
+    func settingButton() -> UIButton {
+        return button
+    }
+
+    func settingTextField() -> UITextField {
+        return textField
+    }
+
+    func infoTypeField() -> TypeField {
+        return typeField
     }
 
     private func addSubviewElement(textField: UITextField?, button: UIButton?) {
@@ -114,11 +137,5 @@ extension MainTableViewCell {
 
     @objc private func donePressed() {
         contentView.endEditing(true)
-    }
-}
-
-extension String {
-    func searchForMatches(regex: String) -> Bool {
-        return self.range(of: regex, options: .regularExpression, range: nil, locale: nil) != nil
     }
 }
